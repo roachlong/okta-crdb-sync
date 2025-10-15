@@ -1,0 +1,21 @@
+# --- Okta → CockroachDB role sync configuration ---
+okta:
+  org_url: "https://YOUR-OKTA-DOMAIN.okta.com"
+  api_token: "${OKTA_API_TOKEN}"
+  page_size: 200
+
+identity_map:
+  pattern: "^(.*)@yourco\.com$"
+  replacement: "sso_\1"
+
+crdb:
+  url: "postgresql://crdb_sync_admin:YOUR_PASSWORD@YOUR-CLUSTER:26257/defaultdb?sslmode=verify-full&sslrootcert=/path/to/ca.crt"
+  ensure_sql_users: true
+  ensure_roles: true
+  enforce_removals: false
+
+mappings:
+  - okta_group: "crdb-readonly"
+    crdb_role: "crdb_readonly"
+  - okta_group: "crdb-dba"
+    crdb_role: "crdb_dba"

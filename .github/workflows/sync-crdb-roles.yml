@@ -1,0 +1,39 @@
+name: Sync CockroachDB roles from Okta
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch: {}
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Write CA cert (optional)
+        if: ${{ secrets.CRDB_CA_CRT != '' }}
+        run: |
+          mkdir -p $HOME/certs
+          echo "${{ secrets.CRDB_CA_CRT }}" > $HOME/certs/ca.crt
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Run sync (dry-run)
+        env:
+          OKTA_API_TOKEN: ${{ secrets.OKTA_API_TOKEN }}
+        run: python sync_okta_crdb.py --config config.yaml --dry-run --verbose
+      - name: Run sync (apply)
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          OKTA_API_TOKEN: ${{ secrets.OKTA_API_TOKEN }}
+        run: |
+          if [ -f "$HOME/certs/ca.crt" ]; then
+            python - <<'PY'
+import re, yaml, os, pathlib
+p = pathlib.Path("config.yaml")
+cfg = yaml.safe_load(p.read_text())
+cfg["crdb"]["url"] = re.sub(r"sslrootcert=[^&]+", "sslrootcert=" + os.path.expanduser("~") + "/certs/ca.crt", cfg["crdb"]["url"])
+p.write_text(yaml.safe_dump(cfg, sort_keys=False))
+PY
+          fi
+          python sync_okta_crdb.py --config config.yaml --verbose
