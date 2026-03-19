@@ -231,4 +231,3 @@ export OKTA_API_TOKEN=xxxxxx
 python sync_okta_crdb.py --config config.yaml --dry-run --verbose
 python sync_okta_crdb.py --config config.yaml --verbose
 ```
-```
