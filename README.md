@@ -222,6 +222,36 @@ Now let's change the permisisons for our test user:
 - Follow the steps above to get a new code and user token
 - Then reconnect to cockroach sql and you should have less permissions
 
+## CRDB SQL Wrapper
+Let's add a command line wrapper that a developer could use to automate their sign-in experience.
+
+First in Okta we need to change the callback URL to point to the listener in our script.
+Go to:
+- Applications → Your App → General → Edit General Settings
+
+Change:
+- **Sign-in redirect URI**: http://localhost:8765/callback
+
+Then create a .env file for the wrapper script
+```
+cat > .env.dev << EOF
+OKTA_DOMAIN=https://integrator-XXXXXXX.okta.com/oauth2/default
+CLIENT_ID=secret
+CLIENT_SECRET=secret
+CRDB_HOST=localhost
+CRDB_PORT=26257
+CRDB_DB=defaultdb
+CRDB_CERTS_DIR=./certs
+EOF
+```
+
+And execute the CRDB SQL wrapper script.
+```
+pip install python-dotenv
+pip install requests
+python crdb-sql.py --env dev
+```
+
 ## Obsolete
 Thanks to CockroachDB's new server.jwt_authentication.authorization.enabled and security.provisioning.jwt.enabled features, as of 25.4.6, we no longer have to run a sync and can throw this python script in the trash where it belongs...
 ```
