@@ -208,3 +208,6 @@ __marimo__/
 
 # Local files
 .DS_Store
+certs/
+data/
+my-safe-directory/
